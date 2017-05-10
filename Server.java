@@ -1,9 +1,11 @@
-package basic.chat;
+package test;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Server {
 	
@@ -51,28 +53,42 @@ class ServerFrame extends JFrame implements Runnable{
 		// TODO Auto-generated method stub
 		try{
 			@SuppressWarnings("resource")
-			ServerSocket server = new ServerSocket(9999);
+			ServerSocket server = new ServerSocket(1234);
 			
 			String nick,ip,message;
+			
+			Map<String,String> contacts = new HashMap<String,String>();
 			
 			SendPackage received_package;
 			
 			while(true){
-				Socket socket1=server.accept();
+				Socket socket=server.accept();
 				
-				ObjectInputStream data_package= new ObjectInputStream(socket1.getInputStream());
+				ObjectInputStream data_package= new ObjectInputStream(socket.getInputStream());
 				
 				received_package=(SendPackage) data_package.readObject();
 				
-				nick=received_package.getNick();
-				
 				message=received_package.getMessage();
 				
-				ip=received_package.getIp();
+				nick=received_package.getNick();
 				
-				textarea.append("\n" + nick + ": " + message + " " + ip);
+				ip=received_package.getContactIp();
 				
-				socket1.close();
+				if (message != null){
+					
+					textarea.append("\n" + nick + ": " + message + " for "+ ip);
+				}
+				
+				else {
+					
+					contacts.put(received_package.getNick(), received_package.getClientIp());
+					
+					contacts.forEach((k,v) -> textarea.append("\n User: " + k + " / IP: " + v));
+				}
+				
+				message=null;
+				
+				socket.close();
 				
 			}
 			
