@@ -1,7 +1,8 @@
-package basic.chat;
+package test;
 
 import java.awt.event.*;
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import javax.swing.*;
 
@@ -35,7 +36,7 @@ class ClientFrame extends JFrame{
 	
 }
 
-class ClientPanel extends JPanel{
+class ClientPanel extends JPanel implements Runnable{
 
 	private static final long serialVersionUID = 1L;
 	
@@ -72,6 +73,10 @@ class ClientPanel extends JPanel{
 		mybutton.addActionListener(myevent);
 		
 		add(mybutton);
+		
+		Thread mythread = new Thread(this);
+		
+		mythread.start();
 	}
 	
 	private JTextArea chatbox;
@@ -82,27 +87,44 @@ class ClientPanel extends JPanel{
 	
 	private JComboBox<String> contacts;
 	
-	class SendText implements ActionListener {
-
-		@Override
+	public void run() {
+		
+		mybutton.doClick(200);
+		
+	}
+	
+	class SendText implements ActionListener{
+		
 		public void actionPerformed(ActionEvent arg0) {
 			
 			try{
-				Socket socket1 = new Socket("192.168.1.110",9999);
+				Socket socket = new Socket("192.168.1.110",1234);
 				
 				SendPackage data = new SendPackage();
+
+				InetAddress myaddress = InetAddress.getLocalHost();
+				
+				data.setClientIp(myaddress.getHostAddress());
 				
 				data.setNick(username);
 				
-				data.setIp("192.168.1.110");
+				data.setContactIp("");
 				
-				data.setMessage(field1.getText());
+				if (!field1.getText().equals("")) {
+					
+					data.setMessage(field1.getText());
 				
-				ObjectOutputStream data_package = new ObjectOutputStream(socket1.getOutputStream());
+					chatbox.append("\n" + username + " : " + field1.getText().trim());
+				
+					field1.setText("");
+					
+				}
+				
+				ObjectOutputStream data_package = new ObjectOutputStream(socket.getOutputStream());
 				
 				data_package.writeObject(data);
 				
-				socket1.close();
+				socket.close();
 				
 			}  catch (java.net.UnknownHostException e) {
 				// TODO Auto-generated catch block
@@ -120,14 +142,22 @@ class SendPackage implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 	
-	private String ip,nick,message;
+	private String clientIp,contactIp,nick,message;
 	
-	public String getIp() {
-		return ip;
+	public String getContactIp() {
+		return contactIp;
 	}
 
-	public void setIp(String ip) {
-		this.ip = ip;
+	public void setContactIp(String contactIp) {
+		this.contactIp = contactIp;
+	}
+
+	public String getClientIp() {
+		return clientIp;
+	}
+
+	public void setClientIp(String ip) {
+		this.clientIp = ip;
 	}
 
 	public String getNick() {
@@ -146,8 +176,3 @@ class SendPackage implements Serializable{
 		this.message = message;
 	}
 }
-
-
-		
-	
-
