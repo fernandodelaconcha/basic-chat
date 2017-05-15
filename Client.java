@@ -3,7 +3,11 @@ package test;
 import java.awt.event.*;
 import java.io.*;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.swing.*;
 
 public class Client {
@@ -87,9 +91,40 @@ class ClientPanel extends JPanel implements Runnable{
 	
 	private JComboBox<String> contacts;
 	
+	private Map<String,String> contactsReceived;
+	
 	public void run() {
 		
 		mybutton.doClick(200);
+		
+		try {
+			@SuppressWarnings("resource")
+			ServerSocket server = new ServerSocket(9090);
+			
+			SendPackage received_package;
+			
+			while(true){
+				Socket socket=server.accept();
+				
+				ObjectInputStream data_package= new ObjectInputStream(socket.getInputStream());
+				
+				received_package=(SendPackage) data_package.readObject();
+				
+				contactsReceived=received_package.getContacts();
+				
+				contactsReceived.forEach((k,v) -> contacts.addItem(k));
+				
+				socket.close();
+				
+			}
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 	
@@ -108,7 +143,11 @@ class ClientPanel extends JPanel implements Runnable{
 				
 				data.setNick(username);
 				
-				data.setContactIp("");
+				try {
+					data.setContactName(contacts.getSelectedItem().toString());
+				} catch (NullPointerException e) {
+					
+				}
 				
 				if (!field1.getText().equals("")) {
 					
@@ -142,14 +181,24 @@ class SendPackage implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 	
-	private String clientIp,contactIp,nick,message;
+	private String clientIp,contactName,nick,message;
 	
-	public String getContactIp() {
-		return contactIp;
+	public Map<String, String> getContacts() {
+		return contacts;
 	}
 
-	public void setContactIp(String contactIp) {
-		this.contactIp = contactIp;
+	public void setContacts(Map<String, String> contacts) {
+		this.contacts = contacts;
+	}
+
+	private Map<String,String> contacts = new HashMap<String,String>();
+	
+	public String getContactName() {
+		return contactName;
+	}
+
+	public void setContactName(String contactName) {
+		this.contactName = contactName;
 	}
 
 	public String getClientIp() {
@@ -175,4 +224,5 @@ class SendPackage implements Serializable{
 	public void setMessage(String message) {
 		this.message = message;
 	}
+	
 }

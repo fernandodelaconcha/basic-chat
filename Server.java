@@ -55,7 +55,7 @@ class ServerFrame extends JFrame implements Runnable{
 			@SuppressWarnings("resource")
 			ServerSocket server = new ServerSocket(1234);
 			
-			String nick,ip,message;
+			String nick,contactName,message;
 			
 			Map<String,String> contacts = new HashMap<String,String>();
 			
@@ -72,11 +72,11 @@ class ServerFrame extends JFrame implements Runnable{
 				
 				nick=received_package.getNick();
 				
-				ip=received_package.getContactIp();
+				contactName=received_package.getContactName();
 				
 				if (message != null){
 					
-					textarea.append("\n" + nick + ": " + message + " for "+ ip);
+					textarea.append("\n" + nick + ": " + message + " / for :"+ contactName + " " + contacts.get(contactName));
 				}
 				
 				else {
@@ -89,6 +89,29 @@ class ServerFrame extends JFrame implements Runnable{
 				message=null;
 				
 				socket.close();
+				
+				try{
+					Socket socket2 = new Socket(received_package.getClientIp(),9090);
+					
+					SendPackage data = new SendPackage();
+					
+					data.setContacts(contacts);
+					
+					ObjectOutputStream data_package2 = new ObjectOutputStream(socket2.getOutputStream());
+					
+					data_package2.writeObject(data);
+					
+					socket2.close();
+					
+				}  catch (java.net.UnknownHostException e) {
+					// TODO Auto-generated catch block
+					System.out.println(e.getMessage());
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					System.out.println(e.getMessage());
+					
+				}
+			
 				
 			}
 			
